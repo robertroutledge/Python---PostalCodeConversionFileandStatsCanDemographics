@@ -43,22 +43,24 @@ def buildpcpolllist():
     return df_multiple_pc
 
 #modify this function to be able to read just the Dissem areas we want to analyze and not the whole province
-# def getDAuid():
-#     #looks at stats can data and PCCF to see which GUIDS are attached to which postal codes
-#     print("all data csv started")
-#     # instructions: https://www12.statcan.gc.ca/wds-sdw/2021profile-profil2021-eng.cfm
-#     #opens the statscan file for BC
-#     df_dauid = pd.read_csv('98-401-X2021006_English_CSV_data_BritishColumbia.csv', encoding='cp1252', dtype=str)
-#     #the column with all DAUIDs is DGUID
-#     #get the list of DAUids you want
-#     #use this page to build DGuid
-#     df_dguid_wanted = pd.read_csv('sample_pccf_Data_dauid.csv',dtype=object)
-#
-#     #the column with dguids wanted is called DAuid
-#     df = df_dauid.merge(df_dguid_wanted,left_on='ALT_GEO_CODE',right_on='DAuid')
-#     df.to_csv('alldata.csv')
-#     print("all data csv done")
-#     return df
+def getDAuid(df_dguid_wanted):
+    #looks at stats can data and PCCF to see which GUIDS are attached to which postal codes
+    print("all data csv started")
+    # instructions: https://www12.statcan.gc.ca/wds-sdw/2021profile-profil2021-eng.cfm
+    #opens the statscan file for BC
+    df_dauid = pd.read_csv('98-401-X2021006_English_CSV_data_BritishColumbia.csv', encoding='cp1252', dtype=str)
+    if df_dguid_wanted.size < 2:
+        df_dguid_wanted = pd.read_csv('riding_poll_pc_dguid.csv', dtype=str)
+    #the column with all DAUIDs is DGUID
+    #get the list of DAUids you want
+    #use this page to build DGuid
+    #df_dguid_wanted = pd.read_csv('sample_pccf_Data_dauid.csv',dtype=object)
+
+    #the column with dguids wanted is called DAuid
+    df = df_dauid.merge(df_dguid_wanted,left_on='ALT_GEO_CODE',right_on='DAuid')
+    df.to_csv('all_statscan_data_by_poll.csv')
+    print("all data csv done")
+    return df
 
 def makeStatsFile(inputdf):
 #this takes the pccf file and turns it into a dataframe with postal code, poll number and DA from the other functions
@@ -79,9 +81,9 @@ def makeStatsFile(inputdf):
     for i in data_list:
         PostalCodeList.append(i[0:6])
         DAuidList.append(i[125:133])
-        CSDuidList.append(i[15:22])
-        SACList.append(i[98:101])
-        Dissem_block_List.append(i[133:136])
+        #CSDuidList.append(i[15:22])
+        #SACList.append(i[98:101])
+        #Dissem_block_List.append(i[133:136])
 
     df3 = pd.DataFrame(zip(PostalCodeList, DAuidList),columns=['PostalCode', 'DAuid'])
     df2 = df3.groupby('PostalCode').first().reset_index()
@@ -95,17 +97,21 @@ if __name__ == "__main__":
     ##gets only the needed info from voters list
     #buildvoterslist()
 
-    ##this can be modified and debugged to eventually only get the dissem areas one wants instead of building the whole province
-    #getDAuid()
 
-    ##takes the voters list and turns it into a list of poll#s, postal codes and a combination of both
-    #builds a list of polls where each poll has a postal code based on the most frequent postal code appearing in that poll
-    BC_PC_Poll_df = buildpcpolllist()
 
-    #takes the stats can data, voter list data, and gives a file that has all postal codes, DAguids
-    makeStatsFile(BC_PC_Poll_df)
+    # ##takes the voters list and turns it into a list of poll#s, postal codes and a combination of both
+    # #builds a list of polls where each poll has a postal code based on the most frequent postal code appearing in that poll
+    # BC_PC_Poll_df = buildpcpolllist()
+    #
+    # #takes the stats can data, voter list data, and gives a file that has all postal codes, DAguids
+    # df = makeStatsFile(BC_PC_Poll_df)
 
-    #needs a function where you can input the statscan data you want for the riding you want
+    #this can be modified and debugged to eventually only get the dissem areas one wants instead of building the whole province
+    #if running full scrip and can pass dataframe
+    # getDAuid(df)
+    #if just running creation of stats can file
+    df = pd.DataFrame()
+    getDAuid(df)
 
 
 
