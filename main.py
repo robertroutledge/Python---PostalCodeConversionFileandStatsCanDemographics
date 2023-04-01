@@ -27,38 +27,38 @@ def buildpcpolllist():
     print("eachpoll with postal codes all provinces started")
     #this reads the voter file created in buildvoterslist and turns it into a list where each poll is assigned the postal code that is most frequent for that poll# based on voters list
     df = pd.read_csv('allvoters.csv')
-    df_unique_polls_postal_codes = df.groupby('CombinedRidingPollPC').agg('first')
-    dfd = df[df.duplicated(subset=['CombinedRidingPollPC'],keep=False)]
-    combined_ridingpoll_list = dfd['Combined_RidingPoll'].unique().tolist()
-    dict = {}
-    df_multiple_pc = pd.DataFrame(columns=['Combined_RidingPoll','PostalCode'])
-    for i in combined_ridingpoll_list:
-        df_pc = dfd[dfd['Combined_RidingPoll'].str.contains(i)]
-        pc = df_pc.PostalCode.mode().iloc[0]
-        dict = {i,pc}
-        df_dictionary = pd.DataFrame([dict])
-        df_multiple_pc = pd.concat([df_multiple_pc, df_dictionary], ignore_index=True)
-
+    df_unique_polls = df.groupby('Combined_RidingPoll').first().reset_index()
+    ridingpoll_list = df_unique_polls['Combined_RidingPoll'].unique().tolist()
+    pollname = []
+    postalcode = []
+    print("for loop started")
+    for i in ridingpoll_list:
+        df_pc = df[df['Combined_RidingPoll'].str.contains(i)]
+        pc = df_pc.PostalCode.mode()[0]
+        pollname.append(i)
+        postalcode.append(pc)
+    df_multiple_pc = pd.DataFrame(list(zip(pollname,postalcode)),columns=['Combined_RidingPoll','PostalCode'])
     df_multiple_pc['CombinedRidingPollPC'] = df_multiple_pc['Combined_RidingPoll'] + df_multiple_pc['PostalCode']
-    final_df = df_unique_polls_postal_codes.merge(df_multiple_pc['Combined_RidingPoll'])
-    #this file is being output with like 5 lines of data from WVS
-    final_df.to_csv('eachpoll_with_postalcode_allprovince.csv')
     print("eachpoll with postal codes all provinces done")
-    return final_df
+    return df_multiple_pc
 
-def getDAuid():
-    print("all data csv started")
-    # instructions: https://www12.statcan.gc.ca/wds-sdw/2021profile-profil2021-eng.cfm
-    df_dauid = pd.read_csv('98-401-X2021006_English_CSV_data_BritishColumbia.csv', encoding='cp1252', dtype=str)
-    #the column with all DAUIDs is DGUID
-    #get the list of DAUids you want
-    #use this page to build DGuid
-    df_dguid_wanted = pd.read_csv('sample_pccf_Data_dauid.csv',dtype=object)
-    #the column with dguids wanted is called DAuid
-    df = df_dauid.merge(df_dguid_wanted,left_on='ALT_GEO_CODE',right_on='DAuid')
-    df.to_csv('alldata.csv')
-    print("all data csv done")
-    return df
+#modify this function to be able to read just the Dissem areas we want to analyze and not the whole province
+# def getDAuid():
+#     #looks at stats can data and PCCF to see which GUIDS are attached to which postal codes
+#     print("all data csv started")
+#     # instructions: https://www12.statcan.gc.ca/wds-sdw/2021profile-profil2021-eng.cfm
+#     #opens the statscan file for BC
+#     df_dauid = pd.read_csv('98-401-X2021006_English_CSV_data_BritishColumbia.csv', encoding='cp1252', dtype=str)
+#     #the column with all DAUIDs is DGUID
+#     #get the list of DAUids you want
+#     #use this page to build DGuid
+#     df_dguid_wanted = pd.read_csv('sample_pccf_Data_dauid.csv',dtype=object)
+#
+#     #the column with dguids wanted is called DAuid
+#     df = df_dauid.merge(df_dguid_wanted,left_on='ALT_GEO_CODE',right_on='DAuid')
+#     df.to_csv('alldata.csv')
+#     print("all data csv done")
+#     return df
 
 def getGUID(inputdf):
 #this takes the pccf file and turns it into a dataframe with postal code, poll number and DA from the other functions
@@ -83,12 +83,11 @@ def getGUID(inputdf):
         SACList.append(i[98:101])
         Dissem_block_List.append(i[133:136])
 
-    df2 = pd.DataFrame(zip(PostalCodeList, DAuidList, Dissem_block_List),columns=['PostalCode', 'DAuid', 'DisseminationBlock'])
-
+    df3 = pd.DataFrame(zip(PostalCodeList, DAuidList),columns=['PostalCode', 'DAuid'])
+    df2 = df3.groupby('PostalCode').first().reset_index()
     just_bc_pccf_df = df2.loc[df2['PostalCode'].isin(PC_List)]
-    just_bc_pccf_df.to_csv(r'sample_pccf_Data.csv')
     final_df = just_bc_pccf_df.merge(inputdf, left_on='PostalCode', right_on='PostalCode')
-    final_df.to_csv('postalcode_to_dissemarea_topoll.csv')
+    final_df.to_csv('riding_poll_pc_dguid.csv')
     print("postal code, poll, dissem area csv done")
     return final_df
 
@@ -96,7 +95,7 @@ if __name__ == "__main__":
     ##gets only the needed info from voters list
     #buildvoterslist()
 
-    ##uses a download from statscan to get a list of all statscan data from BC by disemmniation area,
+    ##this can be modified and debugged to eventually only get the dissem areas one wants instead of building the whole province
     #getDAuid()
 
     ##takes the voters list and turns it into a list of poll#s, postal codes and a combination of both
