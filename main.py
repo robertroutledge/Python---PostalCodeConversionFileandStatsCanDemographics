@@ -60,7 +60,7 @@ def buildpcpolllist():
 #     print("all data csv done")
 #     return df
 
-def getGUID(inputdf):
+def makeStatsFile(inputdf):
 #this takes the pccf file and turns it into a dataframe with postal code, poll number and DA from the other functions
     print("postal code, poll, dissem area csv started")
     PC_List = inputdf['PostalCode'].tolist()
@@ -102,10 +102,8 @@ if __name__ == "__main__":
     #builds a list of polls where each poll has a postal code based on the most frequent postal code appearing in that poll
     BC_PC_Poll_df = buildpcpolllist()
 
-
-
     #takes the stats can data, voter list data, and gives a file that has all postal codes, DAguids
-    final_df = getGUID(BC_PC_Poll_df)
+    makeStatsFile(BC_PC_Poll_df)
 
     #needs a function where you can input the statscan data you want for the riding you want
 
