@@ -179,18 +179,6 @@ def process_data_by_poll():
     citizenshipfiledf.to_csv('citizenship.csv',index=False)
     diversityfiledf.to_csv('ethnicity.csv',index=False)
     educationfiledf.to_csv('education.csv',index=False)
-
-    print(agefiledf.head())
-    print(agefiledf.size)
-
-
-
-
-
-
-
-
-
     return
 
 
@@ -210,10 +198,14 @@ if __name__ == "__main__":
     #this can be modified and debugged to eventually only get the dissem areas one wants instead of building the whole province
     #if running full scrip and can pass dataframe
     # getDAuid(df)
+
     #if just running creation of stats can file
     # df = pd.DataFrame()
     # getDAuid(df)
+
     process_data_by_poll()
+
+    #download shapefiles here: https://www12.statcan.gc.ca/census-recensement/2021/geo/sip-pis/boundary-limites/index2021-eng.cfm?year=21
 
 
 
